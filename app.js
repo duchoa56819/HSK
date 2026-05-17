@@ -3,6 +3,7 @@ let currentLevel = 'all';
 let currentPage = 'dashboard';
 let progress = JSON.parse(localStorage.getItem('hsk_progress') || '{}');
 let quizState = {};
+let listeningState = {};
 let fcState = {};
 let writingState = { words: [], index: 0, writer: null };
 
@@ -21,6 +22,7 @@ function navigateTo(page) {
     if (page === 'dashboard') updateDashboard();
     if (page === 'flashcard') initFlashcards();
     if (page === 'quiz') startQuiz();
+    if (page === 'listening') startListeningQuiz();
     if (page === 'grammar') renderGrammar();
     if (page === 'writing') initWriting();
     if (page === 'wordlist') renderWordList();
@@ -33,6 +35,7 @@ function setLevel(level) {
     if (currentPage === 'dashboard') updateDashboard();
     if (currentPage === 'flashcard') initFlashcards();
     if (currentPage === 'quiz') startQuiz();
+    if (currentPage === 'listening') startListeningQuiz();
     if (currentPage === 'grammar') renderGrammar();
     if (currentPage === 'writing') initWriting();
     if (currentPage === 'wordlist') renderWordList();
@@ -224,6 +227,94 @@ function showQuizResult() {
 
     document.getElementById('quiz-result-title').textContent = title;
     document.getElementById('quiz-result-text').textContent = text;
+}
+
+// ============ Listening ============
+function startListeningQuiz() {
+    const words = shuffle([...getWords()]);
+    listeningState = {
+        words: words.slice(0, Math.min(10, words.length)),
+        index: 0,
+        score: 0,
+        answered: false
+    };
+    document.getElementById('listening-result').style.display = 'none';
+    document.getElementById('listening-options').style.display = 'flex';
+    document.getElementById('listening-counter').parentElement.style.display = 'flex';
+    showListeningQuestion();
+}
+
+function showListeningQuestion() {
+    const { words, index, score } = listeningState;
+    if (index >= words.length) { showListeningResult(); return; }
+    const word = words[index];
+    listeningState.answered = false;
+    document.getElementById('listening-counter').textContent = 'Câu ' + (index + 1) + ' / ' + words.length;
+    document.getElementById('listening-score').textContent = 'Điểm: ' + score;
+    document.getElementById('listening-next').style.display = 'none';
+
+    // Auto play audio when question shows
+    setTimeout(() => playListeningAudio(), 300);
+
+    const allWords = HSK_DATA;
+    let options = [word];
+    while (options.length < 4) {
+        const r = allWords[Math.floor(Math.random() * allWords.length)];
+        if (!options.find(o => o.h === r.h)) options.push(r);
+    }
+    options = shuffle(options);
+
+    const container = document.getElementById('listening-options');
+    container.innerHTML = '';
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-option';
+        btn.textContent = `${opt.h} (${opt.p}) - ${opt.m}`;
+        btn.onclick = () => selectListeningAnswer(btn, opt.h === word.h, word);
+        container.appendChild(btn);
+    });
+}
+
+function selectListeningAnswer(btn, correct, word) {
+    if (listeningState.answered) return;
+    listeningState.answered = true;
+    btn.classList.add(correct ? 'correct' : 'wrong');
+    if (correct) listeningState.score++;
+    updateWordProgress(word.h, correct);
+
+    // Highlight correct answer
+    document.querySelectorAll('#listening-options .quiz-option').forEach(o => {
+        if (o.textContent.includes(word.h)) o.classList.add('correct');
+        o.style.pointerEvents = 'none';
+    });
+    document.getElementById('listening-next').style.display = 'block';
+}
+
+function nextListeningQuestion() {
+    listeningState.index++;
+    showListeningQuestion();
+}
+
+function showListeningResult() {
+    const { score, words } = listeningState;
+    const pct = Math.round((score / words.length) * 100);
+    document.getElementById('listening-options').style.display = 'none';
+    document.getElementById('listening-next').style.display = 'none';
+    document.getElementById('listening-counter').parentElement.style.display = 'none';
+    document.getElementById('listening-result').style.display = 'block';
+
+    let title, text;
+    if (pct >= 90) { title = '🏆 Lỗ tai vàng!'; text = `Bạn nghe đúng ${score}/${words.length} câu!`; }
+    else if (pct >= 70) { title = '👏 Rất tốt!'; text = `Bạn đạt ${score}/${words.length} câu.`; }
+    else { title = '💪 Cần luyện nghe thêm!'; text = `${score}/${words.length} câu. Đừng nản nhé!`; }
+
+    document.getElementById('listening-result-title').textContent = title;
+    document.getElementById('listening-result-text').textContent = text;
+}
+
+function playListeningAudio() {
+    const word = listeningState.words[listeningState.index];
+    if (word) speak(word.h);
 }
 
 // ============ Word List ============
