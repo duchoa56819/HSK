@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSK Master - Học Tiếng Trung HSK 1 & 2</title>
+    <meta name="description" content="Ứng dụng học từ vựng HSK 1 và HSK 2 với flashcard, quiz và theo dõi tiến độ">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="logo">
+                <span class="logo-icon">汉</span>
+                <span class="logo-text">HSK Master</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+                    <span class="nav-icon">📊</span><span>Tổng quan</span>
+                </li>
+                <li class="nav-item" data-page="flashcard" onclick="navigateTo('flashcard')">
+                    <span class="nav-icon">🃏</span><span>Flashcard</span>
+                </li>
+                <li class="nav-item" data-page="quiz" onclick="navigateTo('quiz')">
+                    <span class="nav-icon">🧠</span><span>Trắc nghiệm</span>
+                </li>
+                <li class="nav-item" data-page="grammar" onclick="navigateTo('grammar')">
+                    <span class="nav-icon">📝</span><span>Ngữ pháp</span>
+                </li>
+                <li class="nav-item" data-page="writing" onclick="navigateTo('writing')">
+                    <span class="nav-icon">✍️</span><span>Luyện viết</span>
+                </li>
+                <li class="nav-item" data-page="wordlist" onclick="navigateTo('wordlist')">
+                    <span class="nav-icon">📖</span><span>Từ vựng</span>
+                </li>
+            </ul>
+            <div class="level-selector">
+                <button class="level-btn active" data-level="all" onclick="setLevel('all')">Tất cả</button>
+                <button class="level-btn" data-level="1" onclick="setLevel('1')">HSK 1</button>
+                <button class="level-btn" data-level="2" onclick="setLevel('2')">HSK 2</button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main id="main-content">
+            <!-- Dashboard Page -->
+            <section id="page-dashboard" class="page active">
+                <h1>Chào mừng bạn! 🎉</h1>
+                <div class="stats-grid">
+                    <div class="stat-card" id="stat-total">
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">Tổng từ vựng</div>
+                    </div>
+                    <div class="stat-card" id="stat-learned">
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">Đã học</div>
+                    </div>
+                    <div class="stat-card" id="stat-mastered">
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">Thành thạo</div>
+                    </div>
+                    <div class="stat-card" id="stat-accuracy">
+                        <div class="stat-number">0%</div>
+                        <div class="stat-label">Độ chính xác</div>
+                    </div>
+                </div>
+                <div class="progress-section">
+                    <h2>Tiến độ học tập</h2>
+                    <div class="progress-bars">
+                        <div class="progress-item">
+                            <span>HSK 1</span>
+                            <div class="progress-bar"><div class="progress-fill" id="progress-hsk1"></div></div>
+                            <span id="progress-hsk1-text">0%</span>
+                        </div>
+                        <div class="progress-item">
+                            <span>HSK 2</span>
+                            <div class="progress-bar"><div class="progress-fill" id="progress-hsk2"></div></div>
+                            <span id="progress-hsk2-text">0%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button class="action-btn" onclick="navigateTo('flashcard')">🃏 Học Flashcard</button>
+                    <button class="action-btn" onclick="navigateTo('quiz')">🧠 Làm Quiz</button>
+                    <button class="action-btn" onclick="resetProgress()">🔄 Reset tiến độ</button>
+                </div>
+            </section>
+
+            <!-- Flashcard Page -->
+            <section id="page-flashcard" class="page">
+                <h1>Flashcard</h1>
+                <div class="flashcard-container">
+                    <div class="flashcard-progress">
+                        <span id="fc-counter">1 / 10</span>
+                        <div class="fc-progress-bar"><div class="fc-progress-fill" id="fc-progress"></div></div>
+                    </div>
+                    <div class="flashcard" id="flashcard" onclick="flipCard()">
+                        <div class="flashcard-inner" id="flashcard-inner">
+                            <div class="flashcard-front">
+                                <div style="position: relative; display: flex; align-items: center; gap: 10px;">
+                                    <div class="fc-hanzi" id="fc-hanzi">你好</div>
+                                    <button class="speak-btn" onclick="playCurrentFlashcardAudio(event)" title="Nghe phát âm">🔊</button>
+                                </div>
+                                <div class="fc-hint">Nhấn để lật</div>
+                            </div>
+                            <div class="flashcard-back">
+                                <div class="fc-pinyin" id="fc-pinyin">nǐ hǎo</div>
+                                <div class="fc-meaning" id="fc-meaning">Xin chào</div>
+                                <div class="fc-example" id="fc-example"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flashcard-actions">
+                        <button class="fc-btn fc-btn-hard" onclick="rateCard('hard')">😓 Khó</button>
+                        <button class="fc-btn fc-btn-ok" onclick="rateCard('ok')">🤔 Tạm ổn</button>
+                        <button class="fc-btn fc-btn-easy" onclick="rateCard('easy')">😎 Dễ</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quiz Page -->
+            <section id="page-quiz" class="page">
+                <h1>Trắc nghiệm</h1>
+                <div class="quiz-container">
+                    <div class="quiz-header">
+                        <span id="quiz-counter">Câu 1 / 10</span>
+                        <span id="quiz-score">Điểm: 0</span>
+                    </div>
+                    <div class="quiz-question">
+                        <div class="quiz-hanzi" id="quiz-hanzi">你好</div>
+                        <div class="quiz-type" id="quiz-type">Chọn nghĩa đúng:</div>
+                    </div>
+                    <div class="quiz-options" id="quiz-options"></div>
+                    <button class="quiz-next-btn" id="quiz-next" onclick="nextQuestion()" style="display:none">Câu tiếp →</button>
+                    <div class="quiz-result" id="quiz-result" style="display:none">
+                        <h2 id="quiz-result-title"></h2>
+                        <p id="quiz-result-text"></p>
+                        <button class="action-btn" onclick="startQuiz()">Làm lại</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Grammar Page -->
+            <section id="page-grammar" class="page">
+                <h1>Ngữ pháp HSK</h1>
+                <div class="grammar-list" id="grammar-list"></div>
+            </section>
+
+            <!-- Writing Page -->
+            <section id="page-writing" class="page">
+                <h1>Luyện viết chữ Hán</h1>
+                <div class="writing-container">
+                    <div class="writing-header">
+                        <span id="writing-word-info">我 (wǒ) - Tôi</span>
+                        <button class="speak-btn-inline" onclick="playWritingAudio()" title="Nghe phát âm">🔊</button>
+                    </div>
+                    <div class="writing-target-wrapper">
+                        <div id="character-target" class="writing-target"></div>
+                    </div>
+                    <div class="writing-controls">
+                        <button class="action-btn" onclick="animateStroke()">Biểu diễn nét</button>
+                        <button class="action-btn" onclick="startWritingQuiz()">Tự viết</button>
+                        <button class="action-btn" onclick="nextWritingWord()">Từ tiếp theo</button>
+                    </div>
+                    <div id="writing-feedback" class="writing-feedback">Sẵn sàng!</div>
+                </div>
+            </section>
+
+            <!-- Word List Page -->
+            <section id="page-wordlist" class="page">
+                <h1>Danh sách từ vựng</h1>
+                <div class="wordlist-controls">
+                    <input type="text" id="search-input" placeholder="🔍 Tìm kiếm từ vựng..." oninput="filterWords()">
+                </div>
+                <div class="wordlist-table" id="wordlist-table"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="grammar.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
